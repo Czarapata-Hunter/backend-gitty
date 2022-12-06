@@ -14,10 +14,25 @@ describe('github auth', () => {
     pool.end();
   });
 
-  it.only('/api/v1/github/login should redirect to the github oauth page', async () => {
+  it('/api/v1/github/login should redirect to the github oauth page', async () => {
     const res = await request(app).get('/api/v1/github/login');
     expect(res.header.location).toMatch(
       /https:\/\/github.com\/login\/oauth\/authorize\?client_id=[\w\d]+&scope=user&redirect_uri=http:\/\/localhost:7890\/api\/v1\/github\/callback/i
     );
+  });
+
+  it('/api/v1/github/callback will login and then redirect user to the dashboard', async () => {
+    const resp = await request
+      .agent(app)
+      .get('/api/v1/github/callback?code=117')
+      .redirects(1);
+    expect(resp.body).toEqual({
+      id: expect.any(String),
+      login: 'theFakest_user',
+      email: 'thefakest@test.com',
+      avatar: 'https://www.placecage.com/gif/300/300',
+      iat: expect.any(Number),
+      exp: expect.any(Number),
+    });
   });
 });
